@@ -19,16 +19,18 @@ public class RocketController : MonoBehaviour
     private bool isMoving = false;
     private Queue<Command> commands = new Queue<Command>();
 
-    public Button addCommandButton;
-    public TMP_InputField commandInputField; 
-    public int commandsLimit;
+    private int maxCommands = 5;
+    private Vector3 initialRocketPosition = new Vector3(0, 0, 0);
+
+
+    public Vector3 finishPosition;
+
+    public List<CommandBox> commandBoxes;
+
 
     void Start()
     {
         levelCompletedPanel.SetActive(false);
-        // Exemplu de comenzi
-        // commands.Enqueue(new Command("up"));
-        // commands.Enqueue(new Command("right", "red_0"));
 
         if (play != null)
         {
@@ -40,51 +42,56 @@ public class RocketController : MonoBehaviour
             restart.onClick.AddListener(OnButtonRestartClick);
         }
 
-        if (addCommandButton != null)
+        GameObject finishObject = GameObject.FindGameObjectWithTag("Finish");
+        if (finishObject != null)
         {
-            addCommandButton.onClick.AddListener(OnAddCommandButtonClick);
+            finishPosition = finishObject.transform.position;
         }
     }
 
+
+
     void OnButtonPlayClick()
     {
-        StartCoroutine(ProcessCommands());
+        bool hasValidCommands = false;
+
+        foreach (var commandBox in commandBoxes)
+        {
+            var (direction, condition) = commandBox.getCommand();
+            if (!string.IsNullOrEmpty(direction))
+            {
+                AddCommand(direction, condition);
+                hasValidCommands = true;
+            }
+        }
+
+        if (hasValidCommands)
+        {
+            StartCoroutine(ProcessCommands());
+        }
+        else
+        {
+            Debug.Log("No valid commands to process!");
+        }
     }
 
     void OnButtonRestartClick()
     {
-        string currentSceneName = SceneManager.GetActiveScene().name;
+        // string currentSceneName = SceneManager.GetActiveScene().name;
 
-        SceneManager.LoadScene(currentSceneName);
+        // SceneManager.LoadScene(currentSceneName);
+        StopAllCoroutines();
+        transform.position = initialRocketPosition;
+        isMoving = false; 
+        commands.Clear(); 
     }
 
-    void OnAddCommandButtonClick()
+    void AddCommand(string direction, string condition = null)
     {
-        if (commands.Count >= commandsLimit) {
-            Debug.Log("Limit of commands exceded!");
-            return;
-        }
-
-        string inputText = commandInputField.text.Trim();
-
-        if (!string.IsNullOrEmpty(inputText))
-        {
-            AddCommand(inputText);
-            commandInputField.text = "";
-        }
-    }
-
-    void AddCommand(string input)
-    {
-        string[] parts = input.Split(' ');
-
-        if (parts.Length == 1)
-        {
-            commands.Enqueue(new Command(parts[0]));
-        }
-        else if (parts.Length == 2)
-        {
-            commands.Enqueue(new Command(parts[0], parts[1]));
+        if (condition == "" || condition == null) {
+            commands.Enqueue(new Command(direction));
+        } else {
+            commands.Enqueue(new Command(direction, condition));
         }
     }
 
@@ -96,8 +103,6 @@ public class RocketController : MonoBehaviour
             gameObject.SetActive(false);
             play.gameObject.SetActive(false);
             restart.gameObject.SetActive(false);
-            addCommandButton.gameObject.SetActive(false);
-            commandInputField.gameObject.SetActive(false);
         }
     }
 
@@ -187,6 +192,28 @@ public class RocketController : MonoBehaviour
 
         return false;
     }
+
+    public void SetMaxCommands(int max)
+    {
+        maxCommands = max + 1;
+
+        // Dezactivează CommandBox-urile care depășesc limita
+        for (int i = 0; i < commandBoxes.Count; i++)
+        {
+            if (i < maxCommands)
+            {
+                commandBoxes[i].gameObject.SetActive(true);
+            }
+            else
+            {
+                commandBoxes[i].gameObject.SetActive(false);
+            }
+        }
+    }
+
+    public void SetInitialRocketPosition(Vector3 pos) {
+        initialRocketPosition = pos;
+    }
 }
 
 public class Command
@@ -200,3 +227,4 @@ public class Command
         this.condition = condition;
     }
 }
+

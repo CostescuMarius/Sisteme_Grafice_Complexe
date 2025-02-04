@@ -11,6 +11,11 @@ TagManager:
   - StartLevel1Button
   - StartLevel2Button
   - StartLevel3Button
+  - upDirection
+  - downDirection
+  - leftDirection
+  - rightDirection
+  - redCondition
   layers:
   - Default
   - TransparentFX
