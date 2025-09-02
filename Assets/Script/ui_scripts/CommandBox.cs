@@ -143,4 +143,12 @@ public class CommandBox : MonoBehaviour
     public (string direction, string condition) getCommand() {
         return (direction, condition);
     }
+
+    public void resetAspect() {
+        direction = "";
+        condition = "";
+
+        mainButton.GetComponent<Image>().color = Color.white;
+        mainButton.GetComponentInChildren<TMP_Text>().text = "";
+    }
 }

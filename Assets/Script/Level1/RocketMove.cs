@@ -12,12 +12,13 @@ public class RocketController : MonoBehaviour
     public float moveSpeed = 1f;
     public Tilemap tilemap;
     public GameObject levelCompletedPanel;
+    public bool loopLevel;
     public Button play;
     public Button restart;
 
     private Vector3 direction = Vector3.zero;
     private bool isMoving = false;
-    private Queue<Command> commands = new Queue<Command>();
+    private Queue<Command> commands;
 
     private int maxCommands = 5;
     private Vector3 initialRocketPosition = new Vector3(0, 0, 0);
@@ -27,9 +28,16 @@ public class RocketController : MonoBehaviour
 
     public List<CommandBox> commandBoxes;
 
+    private int score;
+    public TMP_Text scoreText;
 
     void Start()
     {
+        play.gameObject.SetActive(true);
+        restart.gameObject.SetActive(false);
+
+        score = 0;
+
         levelCompletedPanel.SetActive(false);
 
         if (play != null)
@@ -48,22 +56,52 @@ public class RocketController : MonoBehaviour
             finishPosition = finishObject.transform.position;
         }
     }
+    
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            SceneManager.LoadScene("Select Level");
+        }
+    }
 
+    public void resetButtons() {
+        play.gameObject.SetActive(true);
+        restart.gameObject.SetActive(false);
+    }
 
+    public void resetCommandBoxes() {
+        foreach (var commandBox in commandBoxes)
+        {
+            commandBox.resetAspect();
+        }
+    }
 
     void OnButtonPlayClick()
     {
+        play.gameObject.SetActive(false);
+        restart.gameObject.SetActive(true);
+        
+        commands = new Queue<Command>();
+
         bool hasValidCommands = false;
 
         foreach (var commandBox in commandBoxes)
         {
-            var (direction, condition) = commandBox.getCommand();
-            if (!string.IsNullOrEmpty(direction))
-            {
-                AddCommand(direction, condition);
-                hasValidCommands = true;
+            if (commandBox.gameObject.activeSelf) {
+                var (direction, condition) = commandBox.getCommand();
+                if (!string.IsNullOrEmpty(direction))
+                {
+                    AddCommand(direction, condition);
+                    hasValidCommands = true;
+                }
             }
         }
+
+        // foreach (var command in commands)
+        // {
+        //     Debug.Log("Direcție: " + command.action + ", Condiție: " + (command.condition ?? "Fără condiție"));
+        // }
 
         if (hasValidCommands)
         {
@@ -77,13 +115,14 @@ public class RocketController : MonoBehaviour
 
     void OnButtonRestartClick()
     {
+        play.gameObject.SetActive(true);
+        restart.gameObject.SetActive(false);
         // string currentSceneName = SceneManager.GetActiveScene().name;
 
         // SceneManager.LoadScene(currentSceneName);
         StopAllCoroutines();
         transform.position = initialRocketPosition;
         isMoving = false; 
-        commands.Clear(); 
     }
 
     void AddCommand(string direction, string condition = null)
@@ -99,11 +138,39 @@ public class RocketController : MonoBehaviour
     {
         if (collision.CompareTag("Finish"))
         {
-            levelCompletedPanel.SetActive(true);
-            gameObject.SetActive(false);
-            play.gameObject.SetActive(false);
-            restart.gameObject.SetActive(false);
+            if (loopLevel) 
+            {
+                updateScore(10 * maxCommands);
+
+                StopAllCoroutines();
+                LevelManager levelManager = FindFirstObjectByType<LevelManager>();
+                if (levelManager != null)
+                {
+                    levelManager.GenerateLevel();
+                }
+            }
+            else 
+            {
+                updateScore(100);
+                levelCompletedPanel.SetActive(true);
+                gameObject.SetActive(false);
+                play.gameObject.SetActive(false);
+                restart.gameObject.SetActive(false);
+            }
         }
+    }
+
+    public void UpdateScoreText()
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = "Score: " + score.ToString();
+        }
+    }
+
+    public int GetScore()
+    {
+        return score;
     }
 
     private IEnumerator ProcessCommands()
@@ -129,6 +196,7 @@ public class RocketController : MonoBehaviour
 
                     if (!IsPositionInsideTilemap(nextPosition))
                     {
+                        Debug.Log(IsPositionInsideTilemap(nextPosition));
                         isMoving = false;
                         break;
                     }
@@ -140,12 +208,16 @@ public class RocketController : MonoBehaviour
                         yield return MoveToTarget(nextPosition);
                         break;
                     }
-
                     yield return MoveToTarget(nextPosition);
                 }
             }
-            else {
+            else if(nextCommand != null && nextCommand.condition == null){
                 Vector3 nextPosition = transform.position + direction;
+                if (!IsPositionInsideTilemap(nextPosition))
+                {
+                    isMoving = false;
+                    break;
+                }
                 yield return MoveToTarget(nextPosition);
             }
         }
@@ -213,6 +285,11 @@ public class RocketController : MonoBehaviour
 
     public void SetInitialRocketPosition(Vector3 pos) {
         initialRocketPosition = pos;
+    }
+
+    public void updateScore(int addScore) {
+        score += addScore;
+        UpdateScoreText();
     }
 }
 

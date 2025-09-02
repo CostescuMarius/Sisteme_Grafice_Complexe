@@ -5,6 +5,7 @@ public class SelectLevel : MonoBehaviour
 {
     public string startLevelButtonTag = "StartLevel1Button";
     public string startLevel2ButtonTag = "StartLevel2Button";
+    public string startLevelRandomButtonTag = "StartLevel3Button";
 
     void Start()
     {
@@ -20,6 +21,13 @@ public class SelectLevel : MonoBehaviour
         {
             UnityEngine.UI.Button button2 = startButton2.GetComponent<UnityEngine.UI.Button>();
             button2.onClick.AddListener(LoadLevel2);
+        }
+
+        GameObject startButtonRandom = GameObject.FindGameObjectWithTag(startLevelRandomButtonTag);
+        if (startButtonRandom != null)
+        {
+            UnityEngine.UI.Button button3 = startButtonRandom.GetComponent<UnityEngine.UI.Button>();
+            button3.onClick.AddListener(LoadLevelRandom);
         }
     }
 
@@ -39,6 +47,11 @@ public class SelectLevel : MonoBehaviour
     public void LoadLevel2()
     {
         SceneManager.LoadScene("Level2");
+    }
+
+    public void LoadLevelRandom()
+    {
+        SceneManager.LoadScene("LevelRandom");
     }
 
     public void LoadMainMenu()

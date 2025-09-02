@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class LevelManager : MonoBehaviour
 {
@@ -21,10 +22,13 @@ public class LevelManager : MonoBehaviour
     Vector3Int rocketPosition;
     Vector3Int blackHolePosition;
 
+
     void Start()
     {
-        //rocketController = rocket.GetComponent<RocketController>();
+        GenerateLevel();
+    }
 
+    public void GenerateLevel() {
         do {
             rocketPosition = GetRandomValidPosition();
             blackHolePosition = GetRandomValidPosition();
@@ -36,13 +40,6 @@ public class LevelManager : MonoBehaviour
         pathFinder = new PathFinder(tilemap, tilemap.GetCellCenterWorld(rocketPosition), tilemap.GetCellCenterWorld(blackHolePosition));
         allPaths = pathFinder.FindAllPaths();
         sortedPaths = pathFinder.SortPathsByDirectionChanges(allPaths);
-
-        // optimalPath = pathFinder.FindOptimalPath(sortedPaths);
-
-        // Debug.Log("Path: " + string.Join(" -> ", optimalPath));
-
-        // Vector3Int redtilePosition = GetRandomValidPosition();
-        // tilemap.SetTile(redtilePosition, redTile);
 
         optimalPath = null;
         int limit = 0;
@@ -61,6 +58,8 @@ public class LevelManager : MonoBehaviour
         {
             rocketController.SetMaxCommands(maxCommands);
             rocketController.SetInitialRocketPosition(rocket.transform.position);
+            rocketController.resetButtons();
+            //rocketController.resetCommandBoxes();
         }
 
         //Debug.Log("Path: " + string.Join(" -> ", optimalPath));
@@ -69,16 +68,44 @@ public class LevelManager : MonoBehaviour
     void AddRandomObstacles(int count)
     {
         placedObstacles.Clear();
+        HashSet<int> usedRows = new HashSet<int>();
+        HashSet<int> usedCols = new HashSet<int>();
+
         for (int i = 0; i < count; i++)
         {
-            Vector3Int obstaclePosition = GetRandomValidPosition();
-            if (!IsPositionOccupied(obstaclePosition))
+            Vector3Int obstaclePosition;
+            int attempts = 0;
+            do
+            {
+                obstaclePosition = GetRandomValidPosition();
+                attempts++;
+                // Evităm pozițiile pe aceeași linie sau coloană
+            } while ((usedRows.Contains(obstaclePosition.y) || usedCols.Contains(obstaclePosition.x) || IsPositionOccupied(obstaclePosition)) && attempts < 100);
+
+            if (attempts < 100) // Ne asigurăm că nu intrăm într-un loop infinit
             {
                 tilemap.SetTile(obstaclePosition, redTile);
                 placedObstacles.Add(obstaclePosition);
+                usedRows.Add(obstaclePosition.y);
+                usedCols.Add(obstaclePosition.x);
             }
         }
     }
+
+    // void AddRandomObstacles(int count)
+    // {
+    //     placedObstacles.Clear();
+    //     for (int i = 0; i < count; i++)
+    //     {
+    //         Vector3Int obstaclePosition = GetRandomValidPosition();
+
+    //         if (!IsPositionOccupied(obstaclePosition))
+    //         {
+    //             tilemap.SetTile(obstaclePosition, redTile);
+    //             placedObstacles.Add(obstaclePosition);
+    //         }
+    //     }
+    // }
 
     void RemovePreviousObstacles()
     {
@@ -109,5 +136,9 @@ public class LevelManager : MonoBehaviour
         while (!tilemap.HasTile(randomPosition)); // Ne asigurăm că poziția e validă
 
         return randomPosition;
+    }
+
+    public List<string> GetOptimalPath() {
+        return optimalPath;
     }
 }
