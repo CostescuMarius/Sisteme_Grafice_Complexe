@@ -21,5 +21,8 @@ EditorBuildSettings:
     path: Assets/Scenes/LevelRandom.unity
     guid: 0da60629970be4545b1f0cbb0e09a350
   m_configObjects:
+    com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000, guid: 881210b5d3918d4419b0a17aada23cfc, type: 2}
+    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: 5eb4b37e27ddb634287e97deb855d78a, type: 2}
+    com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: 2e6f24a3e7a983b428c74146e635907b, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

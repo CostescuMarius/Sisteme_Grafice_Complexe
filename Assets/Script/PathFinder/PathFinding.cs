@@ -94,7 +94,7 @@ public class PathFinder
 
                     if (CountDirectionChanges(newPath) > 4)
                     {
-                        continue; // Oprire dacă sunt mai mult de 6 schimbări de direcție
+                        continue;
                     }
 
                     HashSet<Vector3Int> newVisited = new HashSet<Vector3Int>(visited);

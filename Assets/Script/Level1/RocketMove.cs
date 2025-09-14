@@ -105,6 +105,7 @@ public class RocketController : MonoBehaviour
 
         if (hasValidCommands)
         {
+            initialRocketPosition = transform.position;
             StartCoroutine(ProcessCommands());
         }
         else
@@ -194,13 +195,6 @@ public class RocketController : MonoBehaviour
                 {
                     Vector3 nextPosition = transform.position + direction;
 
-                    if (!IsPositionInsideTilemap(nextPosition))
-                    {
-                        Debug.Log(IsPositionInsideTilemap(nextPosition));
-                        isMoving = false;
-                        break;
-                    }
-
                     if (nextCommand != null && nextCommand.condition != null && IsCurrentTileColor(nextCommand.condition))
                     {
                         direction = GetDirection(nextCommand.action);
@@ -208,6 +202,14 @@ public class RocketController : MonoBehaviour
                         yield return MoveToTarget(nextPosition);
                         break;
                     }
+
+                    if (!IsPositionInsideTilemap(nextPosition))
+                    {
+                        Debug.Log(IsPositionInsideTilemap(nextPosition));
+                        isMoving = false;
+                        break;
+                    }
+                    
                     yield return MoveToTarget(nextPosition);
                 }
             }
@@ -285,6 +287,10 @@ public class RocketController : MonoBehaviour
 
     public void SetInitialRocketPosition(Vector3 pos) {
         initialRocketPosition = pos;
+    }
+
+    public Vector3 GetCurrentRocketPosition() {
+        return transform.position;
     }
 
     public void updateScore(int addScore) {

@@ -47,6 +47,7 @@ public class LevelManager : MonoBehaviour
         {
             limit++;
             RemovePreviousObstacles();
+            clearSolution();
             AddRandomObstacles(Random.Range(2, 5));
             optimalPath = pathFinder.FindOptimalPath(sortedPaths);
         }
@@ -88,6 +89,8 @@ public class LevelManager : MonoBehaviour
                 placedObstacles.Add(obstaclePosition);
                 usedRows.Add(obstaclePosition.y);
                 usedCols.Add(obstaclePosition.x);
+
+                Debug.Log("X: " + obstaclePosition.y + ";     Y: " + obstaclePosition.y);
             }
         }
     }
@@ -116,6 +119,23 @@ public class LevelManager : MonoBehaviour
         placedObstacles.Clear();
     }
 
+    void clearSolution()
+    {
+        TileBase eachTile;
+        foreach (var position in tilemap.cellBounds.allPositionsWithin)
+        {
+            if (tilemap.HasTile(position)) {
+                eachTile = tilemap.GetTile(position);
+
+                //Debug.Log(eachTile.name.ToLower() + " contains space_solution: " + eachTile.name.ToLower().Contains("space-solution"));
+
+                if (eachTile.name.ToLower().Contains("space-solution")) {
+                    tilemap.SetTile(position, spaceTile);
+                }
+            }
+        }
+    }
+
     bool IsPositionOccupied(Vector3Int position)
     {
         return position == tilemap.WorldToCell(rocket.transform.position) ||
@@ -133,12 +153,16 @@ public class LevelManager : MonoBehaviour
             int y = Random.Range(bounds.yMin, bounds.yMax);
             randomPosition = new Vector3Int(x, y, 0);
         }
-        while (!tilemap.HasTile(randomPosition)); // Ne asigurăm că poziția e validă
+        while (!tilemap.HasTile(randomPosition) || (tilemap.HasTile(randomPosition) && !tilemap.GetTile(randomPosition).name.ToLower().Contains("space")));
 
         return randomPosition;
     }
 
     public List<string> GetOptimalPath() {
         return optimalPath;
+    }
+
+    public Vector3 GetStartPosition() {
+        return rocket.transform.position;
     }
 }
